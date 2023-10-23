@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "jspdf": "^2.5.1",
     "smooth-signature": "^1.0.13"
   }
 }

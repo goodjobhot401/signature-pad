@@ -38,9 +38,10 @@
 
         <h1 class="text-center text-light">簽名去背檔</h1>
         <div id="signature-img-zone" class="border" style="height: 200px; width: 100%; background-color: #f0f0f0"></div>
-        <div class=" mt-3 pe-4 d-flex flex-row justify-content-evenly" style="width: 100%;">
+        <div class=" mt-3 mb-5 d-flex flex-row justify-content-evenly" style="width: 100%;">
           <button id="clean-img" class="btn btn-primary fs-4" style="width: 100px;">Clean</button>
-          <button id="create-sign" class="btn btn-success fs-4" style="width: 100px;">Create</button>
+          <button id="create-sign" class="btn btn-warning fs-4" style="width: 100px;">Create</button>
+          <button id="export-pdf" class="btn btn-success fs-4" style="width: 100px;">Export</button>
         </div>
       </div>
 
@@ -72,10 +73,11 @@
     integrity="sha512-1g3IT1FdbHZKcBVZzlk4a4m5zLRuBjMFMxub1FeIRvR+rhfqHFld9VFXXBYe66ldBWf+syHHxoZEbZyunH6Idg=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+
   <script>
     // 右半邊 PDF 區
     // 宣告 pdf 檔案的位置, 要渲染的頁數, 要縮放的大小
-    const url = './sign.pdf'
+    const url = './resume.pdf'
     const pageNumber = 1
     const scale = 1.5
     let fabricCanvas;
@@ -89,6 +91,7 @@
     const signatureZone = document.getElementById('signature-img-zone')
     const cleanImg = document.getElementById('clean-img')
     const createSign = document.getElementById('create-sign')
+    const exportBut = document.getElementById('export-pdf')
 
     // 記錄每一筆的資料, 實現 undo 功能
     let savedStroke = []
@@ -171,7 +174,7 @@
 
     // 按 delete 刪除 fabric.js 創建的 canvas 元件 
     document.addEventListener('keydown', function (event) {
-      if (event.key === 'Delete') {
+      if (event.key === 'Delete' || event.key === 'Backspace') {
         const activeObject = fabricCanvas.getActiveObject()
         if (activeObject.type === 'image') {
           fabricCanvas.remove(activeObject)
@@ -181,6 +184,9 @@
       }
     })
 
+    exportBut.addEventListener('click', () => {
+      exportToPDF(url, pageNumber, scale)
+    })
 
     // 右半 pdf 區, 引入 pdf.worker.js
     pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -249,10 +255,50 @@
           width: width,
           height: height
         })
+
         return fabricCanvas
       } catch (error) {
         console.log('An error occurred:', error)
         return null;
+      }
+    }
+
+
+    // 匯出 PDF 檔
+    async function exportToPDF(url, pageNumber, scale) {
+      try {
+        // 取得 PDF 文件的長寬
+        const { width, height } = await getPDFViewport(url, pageNumber, scale)
+        const canvasPDF = document.getElementById('canvas-pdf')
+
+        // 創建一個所有 canvas 的 canvas 元件
+        const mergedCanvas = document.createElement('canvas')
+        mergedCanvas.width = width
+        mergedCanvas.height = height
+        const mergedContext = mergedCanvas.getContext('2d')
+
+        // 把當前 fabricCanvas 援建的內容轉成 image 編碼
+        const fabricCanvasDataUrl = fabricCanvas.toDataURL('image/jpeg')
+        const fabricCanvasImage = new Image()
+        fabricCanvasImage.src = fabricCanvasDataUrl
+
+        // 合併所有 canvas 元件
+        fabricCanvasImage.onload = () => {
+          mergedContext.drawImage(canvasPDF, 0, 0)
+          mergedContext.drawImage(fabricCanvasImage, 0, 0)
+
+          // 創建 jsPDF 的實例
+          const newPDF = new jsPDF('portrait', 'px', [width, height])
+          const dataUrl = mergedCanvas.toDataURL('image/jpeg')
+
+          if (dataUrl) {
+            // 將合併後的 canvas 加入 PDF 檔
+            newPDF.addImage(dataUrl, 0, 0, width, height)
+            newPDF.save('testPDF')
+          }
+        }
+      } catch (error) {
+        console.log('An error occurred', error)
       }
     }
 
