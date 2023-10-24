@@ -28,15 +28,21 @@
       <!-- 左半邊 -->
       <div id="left-side" class="col col-4 border pt-5 pb-5" style="height: 100vh; background-color: #333333c4">
         <h1 class="mt-5 text-center text-light">簽名區</h1>
-        <canvas id="canvas-sign" class="border" style="width: 100%; background-color: #f0f0f0"></canvas>
+
+        <div class="mt-4 mb-4 fs-4 d-flex justify-content-center">
+          <button id="create-rect" class="btn btn-warning" style="width: 50%; height: 50px;">Creat Sign Rect</button>
+        </div>
+
+        <canvas id="canvas-sign" class="mt-3 border" style="width: 100%; background-color: #f0f0f0"></canvas>
 
         <div class="mt-3 mb-5 d-flex justify-content-evenly" style="height: 50px; width: 100%;">
+          
           <button id="clean" class="btn btn-primary fs-4" style="width: 100px;">Clean</button>
           <button id="undo" class="btn btn-warning fs-4" style="width: 100px;">Undo</button>
           <button id="save" class="btn btn-success fs-4" style="width: 100px;">Save</button>
         </div>
 
-        <h1 class="text-center text-light">簽名去背檔</h1>
+        <h1 class="mt-5 text-center text-light">簽名去背檔</h1>
         <div id="signature-img-zone" class="border" style="height: 200px; width: 100%; background-color: #f0f0f0"></div>
         <div class=" mt-3 mb-5 d-flex flex-row justify-content-evenly" style="width: 100%;">
           <button id="clean-img" class="btn btn-primary fs-4" style="width: 100px;">Clean</button>
@@ -49,7 +55,7 @@
       <div id="right-side" class="col col-8 border"
         style="height: 100vh; overflow-y: scroll; background-color: #f0f0f0;">
 
-        <div id="canvas-container" style="position: relative;">
+        <div id="container" style="position: relative;">
           <div id="canvas-pdf-container" style="position: absolute; top: 0; left: 0; display: block;">
             <canvas id="canvas-pdf"></canvas>
           </div>
@@ -85,6 +91,7 @@
     // 左半簽名區
     const canvas = document.getElementById("canvas-sign")
     const signaturePad = new SignaturePad(canvas)
+    const createRectBut = document.getElementById('create-rect')
     const cleanBut = document.getElementById('clean')
     const undoBut = document.getElementById('undo')
     const saveBut = document.getElementById('save')
@@ -92,6 +99,29 @@
     const cleanImg = document.getElementById('clean-img')
     const createSign = document.getElementById('create-sign')
     const exportBut = document.getElementById('export-pdf')
+
+    // 創建指定簽名區域
+    createRectBut.addEventListener('click', () => {
+      const rect = document.createElement('canvas')
+      const signRect = new fabric.Rect(rect)
+
+      signRect.set({
+        left: 100,
+        top: 500,
+        width: signatureZone.clientWidth * 0.5,
+        height: signatureZone.clientHeight * 0.5,
+        opacity: 0.35,
+        fill: 'blue'
+      })
+
+      fabricCanvas.add(signRect)
+
+      signRect.on('mousedblclick', function () {
+        fabricCanvas.remove(signRect)
+        fabricCanvas.discardActiveObject()
+        fabricCanvas.renderAll()
+      })
+    })
 
     // 記錄每一筆的資料, 實現 undo 功能
     let savedStroke = []
@@ -176,10 +206,12 @@
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Delete' || event.key === 'Backspace') {
         const activeObject = fabricCanvas.getActiveObject()
-        if (activeObject.type === 'image') {
+        if (activeObject.type === 'image' || activeObject.type === 'rect') {
           fabricCanvas.remove(activeObject)
           fabricCanvas.discardActiveObject()
           fabricCanvas.renderAll()
+        } else {
+          console.log("This object's type = " + activeObject.type)
         }
       }
     })
@@ -306,9 +338,12 @@
     renderPDF(url, pageNumber, scale)
     createFabricCanvas(url, pageNumber, scale)
 
-    // 把畫面輸出成 PDF
-    const newPDF = new jsPDF()
-    const canvasPDF = document.getElementById('canvas-pdf')
+    // 創建 rect , 長寬比例對應 signature-pad
+    // 監聽 rect
+    // 1. 拖拉後回傳：最後的中心座標(offset-X, offset-Y) 以及四點座標
+    // 2. 被點擊後, 如果有簽名檔png 已經被生成, 則會在此區塊生成一個簽名檔的 canvas(長寬都按照四點座標), 且此 canvas 有 mousedblclick事件和 keydown=Backspace 事件
+    
+    // 
 
   </script>
 
