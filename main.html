@@ -89,8 +89,8 @@
     const scale = 1.5
     let fabricCanvas;
     let signRect;
-    let signRectDraggable = true
-    let signRectData = []
+    let signRects = []
+    let isDraggingEnabled = true
 
     // 左半簽名區
     const canvas = document.getElementById("canvas-sign")
@@ -105,49 +105,44 @@
     const createSign = document.getElementById('create-sign')
     const exportBut = document.getElementById('export-pdf')
 
-    // 創建指定簽名區域
-    createRectBut.addEventListener('click', () => {
-      const rect = document.createElement('canvas')
-      signRect = new fabric.Rect(rect)
+  // 創建指定簽名區域
+  createRectBut.addEventListener('click', () => {
+    const rect = document.createElement('canvas')
+    const signRect = new fabric.Rect(rect)
 
-      signRect.set({
-        left: 100,
-        top: 500,
-        width: signatureZone.clientWidth * 0.5,
-        height: signatureZone.clientHeight * 0.5,
-        opacity: 0.35,
-        fill: 'blue'
-      })
+    signRect.set({
+      left: 100,
+      top: 500,
+      width: signatureZone.clientWidth * 0.5,
+      height: signatureZone.clientHeight * 0.5,
+      opacity: 0.35,
+      fill: 'blue',
+      lockMovementX: !isDraggingEnabled,
+      lockMovementY: !isDraggingEnabled
+    })
 
-      fabricCanvas.add(signRect)
+    fabricCanvas.add(signRect)
+    signRects.push(signRect)
 
-      signRect.on('mousedblclick', function () {
-        fabricCanvas.remove(signRect)
-        fabricCanvas.discardActiveObject()
-        fabricCanvas.renderAll()
-      })
-
-      signRect.lockMovementX = !signRectDraggable
-      signRect.lockMovementY = !signRectDraggable
+    signRect.on('mousedblclick', function () {
+      fabricCanvas.remove(signRect)
+      fabricCanvas.discardActiveObject()
       fabricCanvas.renderAll()
     })
+    fabricCanvas.renderAll()
+  })
 
+  // 確定簽名區域
+  doneBut.addEventListener('click', () => {
+    isDraggingEnabled = !isDraggingEnabled
 
-    // 確定簽名區域
-    doneBut.addEventListener('click', () => {
-      if (signRect) {
-        signRectDraggable = !signRectDraggable
-
-        if (signRectDraggable) {
-          signRect.lockMovementX = false
-          signRect.lockMovementY = false
-        } else {
-          signRect.lockMovementX = true
-          signRect.lockMovementY = true
-        }
-        fabricCanvas.renderAll()
-      }
+    signRects.forEach(function (signRect) {
+      signRect.lockMovementX = !isDraggingEnabled
+      signRect.lockMovementY = !isDraggingEnabled
     })
+    fabricCanvas.renderAll()
+  })
+
 
     // 記錄每一筆的資料, 實現 undo 功能
     let savedStroke = []
@@ -219,7 +214,7 @@
 
         fabricCanvas.add(signatureCanvas)
 
-        // 點擊兩下刪除 cavas 元件
+        // 點擊兩下刪除 canvas 元件
         signatureCanvas.on('mousedblclick', function () {
           fabricCanvas.remove(signatureCanvas)
           fabricCanvas.discardActiveObject()
