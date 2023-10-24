@@ -163,7 +163,7 @@
 
         fabricCanvas.add(signatureCanvas)
 
-        // 點擊兩下刪除 cavas 元件
+        // 點擊兩下刪除 canvas 元件
         signatureCanvas.on('mousedblclick', function () {
           fabricCanvas.remove(signatureCanvas)
           fabricCanvas.discardActiveObject()
@@ -277,7 +277,7 @@
         mergedCanvas.height = height
         const mergedContext = mergedCanvas.getContext('2d')
 
-        // 把當前 fabricCanvas 援建的內容轉成 image 編碼
+        // 把當前 fabricCanvas 的內容轉成 image 編碼
         const fabricCanvasDataUrl = fabricCanvas.toDataURL('image/jpeg')
         const fabricCanvasImage = new Image()
         fabricCanvasImage.src = fabricCanvasDataUrl
@@ -305,10 +305,6 @@
 
     renderPDF(url, pageNumber, scale)
     createFabricCanvas(url, pageNumber, scale)
-
-    // 把畫面輸出成 PDF
-    const newPDF = new jsPDF()
-    const canvasPDF = document.getElementById('canvas-pdf')
 
   </script>
 
