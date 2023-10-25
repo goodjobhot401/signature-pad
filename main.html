@@ -51,7 +51,8 @@
         <div id="signature-img-zone" class="border" style="height: 200px; width: 100%; background-color: #f0f0f0"></div>
         <div class=" mt-3 mb-5 d-flex flex-row justify-content-evenly" style="width: 100%;">
           <button id="clean-img" class="btn btn-primary fs-4" style="width: 100px;">Clean</button>
-          <button id="create-sign" class="btn btn-warning fs-4" style="width: 100px;">Create</button>
+          <!-- <button id="create-sign" class="btn btn-warning fs-4" style="width: 100px;">Create</button> -->
+          <button id="sign-pdf" class="btn btn-warning fs-4" style="width: 100px;">Sign</button>
           <button id="export-pdf" class="btn btn-success fs-4" style="width: 100px;">Export</button>
         </div>
       </div>
@@ -94,8 +95,10 @@
     let fabricCanvas;
     let signRect;
     let signRects = []
+    let signRectInfo = []
     let serialNum = 1
     let isDraggingEnabled = true
+    let signImageCanvasList = []
 
     // 左半簽名區
     const canvas = document.getElementById("canvas-sign")
@@ -108,7 +111,8 @@
     const saveBut = document.getElementById('save')
     const signatureZone = document.getElementById('signature-img-zone')
     const cleanImg = document.getElementById('clean-img')
-    const createSign = document.getElementById('create-sign')
+    // const createSign = document.getElementById('create-sign')
+    const signBut = document.getElementById('sign-pdf')
     const exportBut = document.getElementById('export-pdf')
 
     // 創建指定簽名框
@@ -130,8 +134,8 @@
         lockMovementY: !isDraggingEnabled
       })
 
-      fabricCanvas.add(signRect)
       signRects.push(signRect)
+      fabricCanvas.add(signRect)
 
       signRect.on('mousedblclick', function () {
         const deletedSignRect = signRects.find((rect) => rect.serialNum === signRect.serialNum)
@@ -175,7 +179,6 @@
 
     // 記錄簽名框的座標, 長寬資料
     submitBut.addEventListener('click', () => {
-      const signRectInfo = []
       signRects.forEach(function (signRect) {
         const scaleX = signRect.scaleX
         const scaleY = signRect.scaleY
@@ -195,7 +198,6 @@
         }
         signRectInfo.push(rectInfo)
       })
-
       console.log(signRectInfo)
     })
 
@@ -241,8 +243,8 @@
         }
 
         const newPng = document.createElement('img')
-        newPng.style.width = signatureZone.width || '100%'
-        newPng.style.height = signatureZone.height || '100%'
+        newPng.style.width = signatureZone.clientWidth + 'px'
+        newPng.style.height = signatureZone.clientHeight + 'px'
         newPng.classList.add('signature-img')
         newPng.setAttribute('src', currentData)
         signatureZone.appendChild(newPng)
@@ -255,27 +257,71 @@
       signatureZone.removeChild(signatureZone.firstChild)
     })
 
-    // 簽名檔轉成 canvas 元件
-    createSign.addEventListener('click', () => {
+    // 簽名檔帶入簽名框
+    // signBut.addEventListener('click', () => {
+    //   if (signatureZone.firstChild) {
+    //     const backgroundImage = signatureZone.firstChild;
+    //     const bgWidth = backgroundImage.clientWidth;
+    //     const bgHeight = backgroundImage.clientHeight;
+    //     console.log(bgWidth, bgHeight)
+
+    //     // 把 signRects 陣列內的資料都替換成 sign
+    //     signRectInfo.forEach(function (signRect) {
+    //       const scaleX = parseFloat(signRect.width / bgWidth)
+    //       const scaleY = parseFloat(signRect.height / bgHeight)
+    //       console.log(`signRect.width ${signRect.width} / bgWidth ${bgWidth} =` + signRect.width / bgWidth)
+
+    //       const signatureCanvas = new fabric.Image(backgroundImage)
+    //       signatureCanvas.set({
+    //         left: signRect.left,
+    //         top: signRect.top,
+    //         width: signRect.width,
+    //         height: signRect.height,
+    //         scaleX: scaleX,
+    //         scaleY: scaleY,
+    //         serialNum: signRect.serialNum
+    //       })
+    //       fabricCanvas.add(signatureCanvas)
+
+    //       signatureCanvas.on('mousedblclick', function () {
+    //         fabricCanvas.remove(signatureCanvas)
+    //         fabricCanvas.discardActiveObject()
+    //         fabricCanvas.renderAll()
+    //       })
+    //     })
+    //   }
+    // })
+
+    // 簽名檔帶入簽名框, 消除簽名框
+    signBut.addEventListener('click', () => {
       if (signatureZone.firstChild) {
-
-        // 用 fabric.js 創建可拖拉的簽名 canvas 元件
         const image = signatureZone.firstChild
-        const signatureCanvas = new fabric.Image(image, {
-          left: 100,
-          top: 100
-        })
-        fabricCanvas.add(signatureCanvas)
+        const pdfCanvas = document.getElementById('canvas-pdf-container')
+        signRectInfo.forEach(function (signRect) {
+          const signImageCanvas = document.createElement('canvas')
+          signImageCanvas.width = signRect.width
+          signImageCanvas.height = signRect.height
+          signImageCanvas.style.position = 'absolute'
+          signImageCanvas.style.top = `${signRect.top}px`
+          signImageCanvas.style.left = `${signRect.left}px`
 
-        signatureCanvas.on('mousedblclick', function () {
-          fabricCanvas.remove(signatureCanvas)
-          fabricCanvas.discardActiveObject()
-          fabricCanvas.renderAll()
+          const context = signImageCanvas.getContext('2d')
+          context.drawImage(image, 0, 0, signRect.width, signRect.height)
+
+          signImageCanvasList.push(signImageCanvas)
+          pdfCanvas.appendChild(signImageCanvas)
+          console.log('我append了')
+
+          const newSignRects = signRects
+          newSignRects.forEach(function (signRect) {
+            fabricCanvas.remove(signRect)
+          })
         })
+        fabricCanvas.renderAll()
       }
     })
 
-    // 按 delete 刪除 fabric.js 創建的 canvas 元件 
+    // 按 delete 刪除創建的 canvas 元件
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Delete' || event.key === 'Backspace') {
         const activeObject = fabricCanvas.getActiveObject()
@@ -380,38 +426,35 @@
     // 匯出 PDF 檔
     async function exportToPDF(url, pageNumber, scale) {
       try {
-        // 取得 PDF 文件的長寬
-        const { width, height } = await getPDFViewport(url, pageNumber, scale)
-        const canvasPDF = document.getElementById('canvas-pdf')
+        // 取得 PDF 文件的长和宽
+        const { width, height } = await getPDFViewport(url, pageNumber, scale);
 
-        // 創建一個所有 canvas 的 canvas 元件
-        const mergedCanvas = document.createElement('canvas')
-        mergedCanvas.width = width
-        mergedCanvas.height = height
-        const mergedContext = mergedCanvas.getContext('2d')
+        // 创建一个用于合并所有 canvas 元素的 canvas
+        const mergedCanvas = document.createElement('canvas');
+        mergedCanvas.width = width;
+        mergedCanvas.height = height;
+        const mergedContext = mergedCanvas.getContext('2d');
 
-        // 把當前 fabricCanvas 援建的內容轉成 image 編碼
-        const fabricCanvasDataUrl = fabricCanvas.toDataURL('image/jpeg')
-        const fabricCanvasImage = new Image()
-        fabricCanvasImage.src = fabricCanvasDataUrl
+        // 遍历额外的 canvas 元素数组，并将它们合并到 mergedCanvas 中
+        for (const signImageCanvas of signImageCanvasList) {
+          const canvasRect = await signImageCanvas.getBoundingClientRect();
+          const left = canvasRect.left;
+          const top = canvasRect.top;
 
-        // 合併所有 canvas 元件
-        fabricCanvasImage.onload = () => {
-          mergedContext.drawImage(canvasPDF, 0, 0)
-          mergedContext.drawImage(fabricCanvasImage, 0, 0)
+          // 在合併的 canvas 上繪製每個 canvas 元素
+          mergedContext.drawImage(signImageCanvas, left, top);
+        }
 
-          // 創建 jsPDF 的實例
-          const newPDF = new jsPDF('portrait', 'px', [width, height])
-          const dataUrl = mergedCanvas.toDataURL('image/jpeg')
+        // 将合并后的 canvas 导出为 PDF 文件
+        const newPDF = new jsPDF('portrait', 'px', [width, height]);
+        const dataUrl = mergedCanvas.toDataURL('image/jpeg');
 
-          if (dataUrl) {
-            // 將合併後的 canvas 加入 PDF 檔
-            newPDF.addImage(dataUrl, 0, 0, width, height)
-            newPDF.save('testPDF')
-          }
+        if (dataUrl) {
+          newPDF.addImage(dataUrl, 'JPEG', 0, 0, width, height);
+          newPDF.save('testPDF');
         }
       } catch (error) {
-        console.log('An error occurred', error)
+        console.log('An error occurred', error);
       }
     }
 
