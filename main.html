@@ -27,23 +27,27 @@
 
       <!-- 左半邊 -->
       <div id="left-side" class="col col-4 border pt-5 pb-5" style="height: 100vh; background-color: #333333c4">
-        <h1 class="mt-5 text-center text-light">簽名區</h1>
 
-        <div class="mt-4 mb-4 d-flex justify-content-evenly">
-          <button id="create-rect" class="btn btn-warning fs-4" style="width: 50%; height: 50px;">Creat Sign Rect</button>
-          <button id="rect-done" class="btn btn-success fs-4" style="width: 30%; height: 50px;">Done</button>
+        <div class="mt-5">
+          <h1 class="text-center text-light">建立簽名框</h1>
+          <div class="mt-4 mb-4 d-flex justify-content-evenly">
+            <button id="create-rect" class="btn btn-primary fs-4" style="width: 30%; height: 50px;">Create</button>
+            <button id="rect-lock" class="btn btn-warning fs-4" style="width: 30%; height: 50px;">Lock</button>
+            <button id="submit" class="btn btn-success fs-4" style="width: 30%; height: 50px;" disabled>Submit</button>
+          </div>
         </div>
 
+
+        <h1 class="mt-5 text-center text-light">創建簽名</h1>
         <canvas id="canvas-sign" class="mt-3 border" style="width: 100%; background-color: #f0f0f0"></canvas>
 
         <div class="mt-3 mb-5 d-flex justify-content-evenly" style="height: 50px; width: 100%;">
-          
           <button id="clean" class="btn btn-primary fs-4" style="width: 100px;">Clean</button>
           <button id="undo" class="btn btn-warning fs-4" style="width: 100px;">Undo</button>
           <button id="save" class="btn btn-success fs-4" style="width: 100px;">Save</button>
         </div>
 
-        <h1 class="mt-5 text-center text-light">簽名去背檔</h1>
+        <h1 class="mt-5 text-center text-light">簽名檔</h1>
         <div id="signature-img-zone" class="border" style="height: 200px; width: 100%; background-color: #f0f0f0"></div>
         <div class=" mt-3 mb-5 d-flex flex-row justify-content-evenly" style="width: 100%;">
           <button id="clean-img" class="btn btn-primary fs-4" style="width: 100px;">Clean</button>
@@ -96,7 +100,8 @@
     const canvas = document.getElementById("canvas-sign")
     const signaturePad = new SignaturePad(canvas)
     const createRectBut = document.getElementById('create-rect')
-    const doneBut = document.getElementById('rect-done')
+    const lockBut = document.getElementById('rect-lock')
+    const submitBut = document.getElementById('submit')
     const cleanBut = document.getElementById('clean')
     const undoBut = document.getElementById('undo')
     const saveBut = document.getElementById('save')
@@ -105,46 +110,84 @@
     const createSign = document.getElementById('create-sign')
     const exportBut = document.getElementById('export-pdf')
 
-  // 創建指定簽名區域
-  createRectBut.addEventListener('click', () => {
-    const rect = document.createElement('canvas')
-    const signRect = new fabric.Rect(rect)
+    // 創建指定簽名框
+    createRectBut.addEventListener('click', () => {
+      const rect = document.createElement('canvas')
+      const signRect = new fabric.Rect(rect)
 
-    signRect.set({
-      left: 100,
-      top: 500,
-      width: signatureZone.clientWidth * 0.5,
-      height: signatureZone.clientHeight * 0.5,
-      opacity: 0.35,
-      fill: 'blue',
-      lockMovementX: !isDraggingEnabled,
-      lockMovementY: !isDraggingEnabled
-    })
+      signRect.set({
+        left: 100,
+        top: 500,
+        width: signatureZone.clientWidth * 0.5,
+        height: signatureZone.clientHeight * 0.5,
+        opacity: 0.35,
+        fill: 'blue',
+        lockMovementX: !isDraggingEnabled,
+        lockMovementY: !isDraggingEnabled
+      })
 
-    fabricCanvas.add(signRect)
-    signRects.push(signRect)
+      fabricCanvas.add(signRect)
+      signRects.push(signRect)
 
-    signRect.on('mousedblclick', function () {
-      fabricCanvas.remove(signRect)
-      fabricCanvas.discardActiveObject()
+      signRect.on('mousedblclick', function () {
+        fabricCanvas.remove(signRect)
+        fabricCanvas.discardActiveObject()
+        fabricCanvas.renderAll()
+      })
       fabricCanvas.renderAll()
     })
-    fabricCanvas.renderAll()
-  })
 
-  // 確定簽名區域
-  doneBut.addEventListener('click', () => {
-    isDraggingEnabled = !isDraggingEnabled
+    // 鎖定簽名框
+    lockBut.addEventListener('click', () => {
+      isDraggingEnabled = !isDraggingEnabled
 
-    signRects.forEach(function (signRect) {
-      signRect.lockMovementX = !isDraggingEnabled
-      signRect.lockMovementY = !isDraggingEnabled
+      signRects.forEach(function (signRect) {
+        signRect.lockMovementX = !isDraggingEnabled
+        signRect.lockMovementY = !isDraggingEnabled
+      })
+
+      if (isDraggingEnabled === false) {
+        lockBut.innerText = 'Unlock'
+        lockBut.classList.remove('btn-warning')
+        lockBut.classList.add('btn-danger')
+        submitBut.removeAttribute("disabled")
+
+      } else {
+        lockBut.innerText = 'Lock'
+        lockBut.classList.remove('btn-danger')
+        lockBut.classList.add('btn-warning')
+        submitBut.setAttribute("disabled", "true")
+      }
+      fabricCanvas.renderAll()
     })
-    fabricCanvas.renderAll()
-  })
+
+    // 記錄簽名框的座標, 長寬資料
+    submitBut.addEventListener('click', () => {
+      const signRectInfo = []
+      signRects.forEach(function (signRect) {
+        const scaleX = signRect.scaleX
+        const scaleY = signRect.scaleY
+
+        const originalWidth = signRect.width
+        const originalHeight = signRect.height
+
+        const scaledWidth = originalWidth * scaleX
+        const scaledHeight = originalHeight * scaleY
+
+        const rectInfo = {
+          left: signRect.left,
+          top: signRect.top,
+          width: scaledWidth,
+          height: scaledHeight
+        }
+        signRectInfo.push(rectInfo)
+      })
+
+      console.log('所有簽名框的資料: ' + signRectInfo)
+    })
 
 
-    // 記錄每一筆的資料, 實現 undo 功能
+
     let savedStroke = []
 
     // 在簽名版設置監聽器
@@ -176,7 +219,6 @@
     // 將簽名版轉成 png 印到去背版
     saveBut.addEventListener("click", () => {
 
-      // 有筆畫資料才能轉換成 png
       if (savedStroke.length > 0) {
         const currentData = savedStroke.at(-1)
         const signatureZone = document.getElementById('signature-img-zone')
@@ -195,13 +237,13 @@
       }
     })
 
-    // 清空去背版的 img 標籤
+    // 清空簽名檔
     cleanImg.addEventListener('click', () => {
       const signatureZone = document.getElementById('signature-img-zone')
       signatureZone.removeChild(signatureZone.firstChild)
     })
 
-    // 把去背版的 png 轉成 canvas 元件
+    // 簽名檔轉成 canvas 元件
     createSign.addEventListener('click', () => {
       if (signatureZone.firstChild) {
 
@@ -211,10 +253,8 @@
           left: 100,
           top: 100
         })
-
         fabricCanvas.add(signatureCanvas)
 
-        // 點擊兩下刪除 canvas 元件
         signatureCanvas.on('mousedblclick', function () {
           fabricCanvas.remove(signatureCanvas)
           fabricCanvas.discardActiveObject()
@@ -237,6 +277,7 @@
       }
     })
 
+    // 匯出 PDF
     exportBut.addEventListener('click', () => {
       exportToPDF(url, pageNumber, scale)
     })
@@ -358,13 +399,6 @@
 
     renderPDF(url, pageNumber, scale)
     createFabricCanvas(url, pageNumber, scale)
-
-    // 創建 rect , 長寬比例對應 signature-pad
-    // 監聽 rect
-    // 1. 拖拉後回傳：最後的中心座標(offset-X, offset-Y) 以及四點座標
-    // 2. 被點擊後, 如果有簽名檔png 已經被生成, 則會在此區塊生成一個簽名檔的 canvas(長寬都按照四點座標), 且此 canvas 有 mousedblclick事件和 keydown=Backspace 事件
-    
-    // 
 
   </script>
 
