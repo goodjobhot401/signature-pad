@@ -94,6 +94,7 @@
     let fabricCanvas;
     let signRect;
     let signRects = []
+    let serialNum = 1
     let isDraggingEnabled = true
 
     // 左半簽名區
@@ -115,6 +116,9 @@
       const rect = document.createElement('canvas')
       const signRect = new fabric.Rect(rect)
 
+      signRect.serialNum = serialNum
+      serialNum++
+
       signRect.set({
         left: 100,
         top: 500,
@@ -130,6 +134,12 @@
       signRects.push(signRect)
 
       signRect.on('mousedblclick', function () {
+        const deletedSignRect = signRects.find((rect) => rect.serialNum === signRect.serialNum)
+        const index = signRects.indexOf(deletedSignRect)
+        if (index > -1) {
+          signRects.splice(index, 1)
+        }
+
         fabricCanvas.remove(signRect)
         fabricCanvas.discardActiveObject()
         fabricCanvas.renderAll()
@@ -137,7 +147,7 @@
       fabricCanvas.renderAll()
     })
 
-    // 鎖定簽名框
+    // 鎖定簽名框(不能新增簽名框, 不能拖移)
     lockBut.addEventListener('click', () => {
       isDraggingEnabled = !isDraggingEnabled
 
@@ -151,12 +161,14 @@
         lockBut.classList.remove('btn-warning')
         lockBut.classList.add('btn-danger')
         submitBut.removeAttribute("disabled")
+        createRectBut.setAttribute("disabled", "true")
 
       } else {
         lockBut.innerText = 'Lock'
         lockBut.classList.remove('btn-danger')
         lockBut.classList.add('btn-warning')
         submitBut.setAttribute("disabled", "true")
+        createRectBut.removeAttribute("disabled")
       }
       fabricCanvas.renderAll()
     })
@@ -175,6 +187,7 @@
         const scaledHeight = originalHeight * scaleY
 
         const rectInfo = {
+          serialNum: signRect.serialNum,
           left: signRect.left,
           top: signRect.top,
           width: scaledWidth,
@@ -183,7 +196,7 @@
         signRectInfo.push(rectInfo)
       })
 
-      console.log('所有簽名框的資料: ' + signRectInfo)
+      console.log(signRectInfo)
     })
 
 
@@ -218,7 +231,6 @@
 
     // 將簽名版轉成 png 印到去背版
     saveBut.addEventListener("click", () => {
-
       if (savedStroke.length > 0) {
         const currentData = savedStroke.at(-1)
         const signatureZone = document.getElementById('signature-img-zone')
@@ -268,6 +280,13 @@
       if (event.key === 'Delete' || event.key === 'Backspace') {
         const activeObject = fabricCanvas.getActiveObject()
         if (activeObject.type === 'image' || activeObject.type === 'rect') {
+          const deletedSignRect = signRects.find((rect) => rect === activeObject)
+          if (deletedSignRect) {
+            const index = signRects.indexOf(deletedSignRect)
+            if (index > -1) {
+              signRects.splice(index, 1)
+            }
+          }
           fabricCanvas.remove(activeObject)
           fabricCanvas.discardActiveObject()
           fabricCanvas.renderAll()
