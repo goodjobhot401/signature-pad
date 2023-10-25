@@ -304,9 +304,17 @@
           signImageCanvas.style.position = 'absolute'
           signImageCanvas.style.top = `${signRect.top}px`
           signImageCanvas.style.left = `${signRect.left}px`
+          signImageCanvas.classList = 'sign-image-canvas'
 
           const context = signImageCanvas.getContext('2d')
-          context.drawImage(image, 0, 0, signRect.width, signRect.height)
+          // context.drawImage(image, 0, 0, signRect.width, signRect.height)
+
+          const newImage = new Image();
+          newImage.src = image.src;
+
+          newImage.onload = () => {
+            context.drawImage(newImage, 0, 0, signRect.width, signRect.height);
+          };
 
           signImageCanvasList.push(signImageCanvas)
           pdfCanvas.appendChild(signImageCanvas)
@@ -426,33 +434,48 @@
     // 匯出 PDF 檔
     async function exportToPDF(url, pageNumber, scale) {
       try {
-        // 取得 PDF 文件的长和宽
         const { width, height } = await getPDFViewport(url, pageNumber, scale);
 
-        // 创建一个用于合并所有 canvas 元素的 canvas
+        // 創建合併所有 canvas 元素的 canvas
         const mergedCanvas = document.createElement('canvas');
         mergedCanvas.width = width;
         mergedCanvas.height = height;
         const mergedContext = mergedCanvas.getContext('2d');
 
-        // 遍历额外的 canvas 元素数组，并将它们合并到 mergedCanvas 中
-        for (const signImageCanvas of signImageCanvasList) {
-          const canvasRect = await signImageCanvas.getBoundingClientRect();
-          const left = canvasRect.left;
-          const top = canvasRect.top;
+        const canvasPDF = document.getElementById('canvas-pdf');
+        const otherCanvasElements = document.querySelectorAll('.sign-image-canvas');
 
-          // 在合併的 canvas 上繪製每個 canvas 元素
-          mergedContext.drawImage(signImageCanvas, left, top);
+        const loadCanvasImages = async () => {
+          mergedContext.drawImage(canvasPDF, 0, 0)
+
+          // 繪製其他 canvas 元素
+          for (const canvasElement of otherCanvasElements) {
+            const parentElementRect = canvasElement.parentElement.getBoundingClientRect()
+            const canvasRect = canvasElement.getBoundingClientRect()
+            const left = canvasRect.left - parentElementRect.left
+            const top = canvasRect.top - parentElementRect.top
+
+            await new Promise((resolve) => {
+              const img = new Image()
+              img.onload = () => {
+                mergedContext.drawImage(canvasElement, left, top)
+                resolve()
+              }
+              const signDataUrl = canvasElement.toDataURL('image/jpeg')
+              img.src = signDataUrl
+            })
+          }
+
+          //  合併後的 canvas 輸出 PDF
+          const newPDF = new jsPDF('portrait', 'px', [width, height])
+          const dataUrl = mergedCanvas.toDataURL('image/jpeg')
+
+          if (dataUrl) {
+            newPDF.addImage(dataUrl, 'JPEG', 0, 0, width, height)
+            newPDF.save('testPDF')
+          }
         }
-
-        // 将合并后的 canvas 导出为 PDF 文件
-        const newPDF = new jsPDF('portrait', 'px', [width, height]);
-        const dataUrl = mergedCanvas.toDataURL('image/jpeg');
-
-        if (dataUrl) {
-          newPDF.addImage(dataUrl, 'JPEG', 0, 0, width, height);
-          newPDF.save('testPDF');
-        }
+        await loadCanvasImages()
       } catch (error) {
         console.log('An error occurred', error);
       }
