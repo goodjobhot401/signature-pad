@@ -24,7 +24,6 @@
 <body>
   <div class="container">
     <div class="row">
-
       <!-- 左半邊 -->
       <div id="left-side" class="col col-4 border pt-5 pb-5" style="height: 100vh; background-color: #333333c4">
 
@@ -73,7 +72,6 @@
       </div>
 
     </div>
-
   </div>
 
   <!-- 引入 pdf.js -->
@@ -118,7 +116,6 @@
     createRectBut.addEventListener('click', () => {
       const rect = document.createElement('canvas')
       const signRect = new fabric.Rect(rect)
-
       signRect.serialNum = serialNum
       serialNum++
 
@@ -142,7 +139,6 @@
         if (index > -1) {
           signRects.splice(index, 1)
         }
-
         fabricCanvas.remove(signRect)
         fabricCanvas.discardActiveObject()
         fabricCanvas.renderAll()
@@ -201,9 +197,7 @@
     })
 
 
-
     let savedStroke = []
-
     // 在簽名版設置監聽器
     signaturePad.addEventListener("beginStroke", () => {
       console.log('signature begin!')
@@ -360,7 +354,6 @@
           canvasContext: context,
           viewport: viewport
         }
-
         await page.render(renderContext)
       } catch (error) {
         console.log('An error occurred:', error)
@@ -383,7 +376,6 @@
           width: width,
           height: height
         })
-
         return fabricCanvas
       } catch (error) {
         console.log('An error occurred:', error)
@@ -408,7 +400,6 @@
 
         const loadCanvasImages = async () => {
           mergedContext.drawImage(canvasPDF, 0, 0)
-
           // 繪製其他 canvas 元素
           for (const canvasElement of otherCanvasElements) {
             const parentElementRect = canvasElement.parentElement.getBoundingClientRect()
@@ -442,17 +433,14 @@
       }
     }
 
-
     renderPDF(url, pageNumber, scale)
     createFabricCanvas(url, pageNumber, scale)
 
   </script>
 
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
     crossorigin="anonymous"></script>
-
 </body>
 
 </html>
