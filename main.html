@@ -111,7 +111,6 @@
     const saveBut = document.getElementById('save')
     const signatureZone = document.getElementById('signature-img-zone')
     const cleanImg = document.getElementById('clean-img')
-    // const createSign = document.getElementById('create-sign')
     const signBut = document.getElementById('sign-pdf')
     const exportBut = document.getElementById('export-pdf')
 
@@ -166,7 +165,7 @@
         lockBut.classList.add('btn-danger')
         submitBut.removeAttribute("disabled")
         createRectBut.setAttribute("disabled", "true")
-
+        signRectInfo = []
       } else {
         lockBut.innerText = 'Lock'
         lockBut.classList.remove('btn-danger')
@@ -257,41 +256,6 @@
       signatureZone.removeChild(signatureZone.firstChild)
     })
 
-    // 簽名檔帶入簽名框
-    // signBut.addEventListener('click', () => {
-    //   if (signatureZone.firstChild) {
-    //     const backgroundImage = signatureZone.firstChild;
-    //     const bgWidth = backgroundImage.clientWidth;
-    //     const bgHeight = backgroundImage.clientHeight;
-    //     console.log(bgWidth, bgHeight)
-
-    //     // 把 signRects 陣列內的資料都替換成 sign
-    //     signRectInfo.forEach(function (signRect) {
-    //       const scaleX = parseFloat(signRect.width / bgWidth)
-    //       const scaleY = parseFloat(signRect.height / bgHeight)
-    //       console.log(`signRect.width ${signRect.width} / bgWidth ${bgWidth} =` + signRect.width / bgWidth)
-
-    //       const signatureCanvas = new fabric.Image(backgroundImage)
-    //       signatureCanvas.set({
-    //         left: signRect.left,
-    //         top: signRect.top,
-    //         width: signRect.width,
-    //         height: signRect.height,
-    //         scaleX: scaleX,
-    //         scaleY: scaleY,
-    //         serialNum: signRect.serialNum
-    //       })
-    //       fabricCanvas.add(signatureCanvas)
-
-    //       signatureCanvas.on('mousedblclick', function () {
-    //         fabricCanvas.remove(signatureCanvas)
-    //         fabricCanvas.discardActiveObject()
-    //         fabricCanvas.renderAll()
-    //       })
-    //     })
-    //   }
-    // })
-
     // 簽名檔帶入簽名框, 消除簽名框
     signBut.addEventListener('click', () => {
       if (signatureZone.firstChild) {
@@ -307,18 +271,15 @@
           signImageCanvas.classList = 'sign-image-canvas'
 
           const context = signImageCanvas.getContext('2d')
-          // context.drawImage(image, 0, 0, signRect.width, signRect.height)
-
-          const newImage = new Image();
-          newImage.src = image.src;
+          const newImage = new Image()
+          newImage.src = image.src
 
           newImage.onload = () => {
-            context.drawImage(newImage, 0, 0, signRect.width, signRect.height);
-          };
+            context.drawImage(newImage, 0, 0, signRect.width, signRect.height)
+          }
 
           signImageCanvasList.push(signImageCanvas)
           pdfCanvas.appendChild(signImageCanvas)
-          console.log('我append了')
 
           const newSignRects = signRects
           newSignRects.forEach(function (signRect) {
@@ -434,16 +395,16 @@
     // 匯出 PDF 檔
     async function exportToPDF(url, pageNumber, scale) {
       try {
-        const { width, height } = await getPDFViewport(url, pageNumber, scale);
+        const { width, height } = await getPDFViewport(url, pageNumber, scale)
 
         // 創建合併所有 canvas 元素的 canvas
-        const mergedCanvas = document.createElement('canvas');
-        mergedCanvas.width = width;
-        mergedCanvas.height = height;
-        const mergedContext = mergedCanvas.getContext('2d');
+        const mergedCanvas = document.createElement('canvas')
+        mergedCanvas.width = width
+        mergedCanvas.height = height
+        const mergedContext = mergedCanvas.getContext('2d')
 
-        const canvasPDF = document.getElementById('canvas-pdf');
-        const otherCanvasElements = document.querySelectorAll('.sign-image-canvas');
+        const canvasPDF = document.getElementById('canvas-pdf')
+        const otherCanvasElements = document.querySelectorAll('.sign-image-canvas')
 
         const loadCanvasImages = async () => {
           mergedContext.drawImage(canvasPDF, 0, 0)
@@ -477,7 +438,7 @@
         }
         await loadCanvasImages()
       } catch (error) {
-        console.log('An error occurred', error);
+        console.log('An error occurred', error)
       }
     }
 
