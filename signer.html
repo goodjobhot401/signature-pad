@@ -38,11 +38,17 @@
           <button id="save" class="btn btn-success fs-4" style="width: 100px;">Save</button>
         </div>
 
-        <h1 class="mt-5 text-center text-light">簽名檔</h1>
+        <h1 class="mt-5 mb-5 text-center text-light">簽名檔</h1>
         <div id="signature-img-zone" class="border" style="height: 200px; width: 100%; background-color: #f0f0f0"></div>
         <div class=" mt-3 mb-5 d-flex flex-row justify-content-evenly" style="width: 100%;">
           <button id="clean-img" class="btn btn-primary fs-4" style="width: 100px;">Clean</button>
           <button id="sign-pdf" class="btn btn-warning fs-4" style="width: 100px;">Sign</button>
+          <button id="submit-sign" class="btn btn-success fs-4" style="width: 100px;">Submit</button>
+        </div>
+
+        <div class="only-for-layout" style="height: 10%; z-index: -1;"></div>
+
+        <div class="d-flex justify-content-center">
           <button id="export-pdf" class="btn btn-success fs-4" style="width: 100px;">Export</button>
         </div>
       </div>
@@ -98,6 +104,7 @@
     const signatureZone = document.getElementById('signature-img-zone')
     const cleanImg = document.getElementById('clean-img')
     const signBut = document.getElementById('sign-pdf')
+    const submitBut = document.getElementById('submit-sign')
     const exportBut = document.getElementById('export-pdf')
 
     let savedStroke = []
@@ -158,7 +165,11 @@
       if (signatureZone.firstChild) {
         const image = signatureZone.firstChild
         const pdfCanvas = document.getElementById('canvas-pdf-container')
-        signRectInfo.forEach(function (signRect) {
+
+        // 篩選 signRectInfo 中的對象
+        const filteredSignRects = signRectInfo.filter(signRect => signRect.name === name)
+
+        filteredSignRects.forEach(function (signRect) {
           const signImageCanvas = document.createElement('canvas')
           signImageCanvas.width = signRect.width
           signImageCanvas.height = signRect.height
@@ -174,14 +185,12 @@
           newImage.onload = () => {
             context.drawImage(newImage, 0, 0, signRect.width, signRect.height)
           }
-
-          // signImageCanvasList.push(signImageCanvas)
           pdfCanvas.appendChild(signImageCanvas)
+        })
 
-          const newSignRects = signRects
-          newSignRects.forEach(function (signRect) {
-            fabricCanvas.remove(signRect)
-          })
+        const newSignRects = signRects
+        newSignRects.forEach(function (signRect) {
+          fabricCanvas.remove(signRect)
         })
         fabricCanvas.renderAll()
       }
@@ -208,9 +217,21 @@
       }
     })
 
+    // submit 將畫面中的簽名檔轉成編碼傳至後端
+    submitBut.addEventListener('click', () => {
+      if (signatureZone.firstChild) {
+        const currentData = savedStroke.at(-1)
+        console.log(`The signature's base64 code is:` + currentData)
+      }
+    })
+
     // 匯出 PDF
     exportBut.addEventListener('click', () => {
-      exportToPDF(url, pageNumber, scale)
+      if (signatureZone.firstChild) {
+        exportToPDF(url, pageNumber, scale)
+      } else {
+        console.log('You have to finish sign!')
+      }
     })
 
     // 右半 pdf 區, 引入 pdf.worker.js
@@ -263,7 +284,7 @@
       }
     }
 
-    const name = 'goodjobhot'
+    const name = 'tom'
     const signRectInfo = [{
       "serialNum": 1,
       "name": "tom",
