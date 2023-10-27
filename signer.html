@@ -100,17 +100,6 @@
     const signBut = document.getElementById('sign-pdf')
     const exportBut = document.getElementById('export-pdf')
 
-    // const rectInfo = {
-    //   serialNum: signRect.serialNum,
-    //   name: signRect.name,
-    //   color: signRect.color,
-    //   priority: signRect.priority,
-    //   left: signRect.left,
-    //   top: signRect.top,
-    //   width: scaledWidth,
-    //   height: scaledHeight
-    // }
-
     let savedStroke = []
     // 在簽名版設置監聽器
     signaturePad.addEventListener("beginStroke", () => {
@@ -274,6 +263,7 @@
       }
     }
 
+    const name = 'goodjobhot'
     const signRectInfo = [{
       "serialNum": 1,
       "name": "tom",
@@ -313,7 +303,7 @@
     }]
 
     // 依照 PDF 的長寬創建 fabric 舞台, 並繪製簽名框
-    async function createFabricCanvas(url, pageNumber, scale, signRectInfo) {
+    async function createFabricCanvas(url, pageNumber, scale, name) {
       try {
         // 獲取 viewport 的長寬
         const { width, height } = await getPDFViewport(url, pageNumber, scale)
@@ -330,22 +320,24 @@
         })
 
         for (const item of signRectInfo) {
-          const rect = document.createElement('canvas')
-          const signRect = new fabric.Rect(rect)
+          if (item.name === name) {
+            const rect = document.createElement('canvas')
+            const signRect = new fabric.Rect(rect)
 
-          signRect.set({
-            left: item.left,
-            top: item.top,
-            width: item.width,
-            height: item.height,
-            fill: item.color,
-            opacity: 0.35,
-            lockMovementX: true,
-            lockMovementY: true,
-            selectable: false,
-          })
-          signRects.push(signRect)
-          fabricCanvas.add(signRect)
+            signRect.set({
+              left: item.left,
+              top: item.top,
+              width: item.width,
+              height: item.height,
+              fill: item.color,
+              opacity: 0.35,
+              lockMovementX: true,
+              lockMovementY: true,
+              selectable: false,
+            })
+            signRects.push(signRect)
+            fabricCanvas.add(signRect)
+          }
         }
 
         return fabricCanvas
@@ -406,7 +398,7 @@
     }
 
     renderPDF(url, pageNumber, scale)
-    createFabricCanvas(url, pageNumber, scale, signRectInfo)
+    createFabricCanvas(url, pageNumber, scale, name)
 
   </script>
 
