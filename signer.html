@@ -90,10 +90,6 @@
     let fabricCanvas;
     let signRect;
     let signRects = []
-    // let signRectInfo = []
-    // let serialNum = 1
-    // let isDraggingEnabled = true
-    // let signImageCanvasList = []
 
     // 左半簽名區
     const canvas = document.getElementById("canvas-sign")
@@ -323,18 +319,14 @@
       "height": 94.73469453697935
     }]
 
-    // 依照 PDF 的長寬創建 fabric 舞台, 並繪製簽名框
+    // 依照 PDF 的長寬創建 fabric 舞台, 並依照 name 繪製簽名框
     async function createFabricCanvas(url, pageNumber, scale, name) {
       try {
-        // 獲取 viewport 的長寬
         const { width, height } = await getPDFViewport(url, pageNumber, scale)
-
-        // 設置 fabricCanvasContainer 長寬
         const fabricCanvasContainer = document.getElementById('fabric-canvas-container')
         fabricCanvasContainer.style.width = `${width}px`
         fabricCanvasContainer.style.height = `${height}px`
 
-        // 創建 Fabric 舞台
         fabricCanvas = new fabric.Canvas('fabric-canvas', {
           width: width,
           height: height
@@ -360,7 +352,6 @@
             fabricCanvas.add(signRect)
           }
         }
-
         return fabricCanvas
       } catch (error) {
         console.log('An error occurred:', error)
