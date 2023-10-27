@@ -48,8 +48,9 @@
 
         <div class="only-for-layout" style="height: 10%; z-index: -1;"></div>
 
-        <div class="d-flex justify-content-center">
-          <button id="export-pdf" class="btn btn-success fs-4" style="width: 100px;">Export</button>
+        <div class="d-flex justify-content-evenly">
+          <button id="export-pdf" class="btn btn-success fs-4" style="width: 150px;">Export</button>
+          <button id="export-pdf-backend" class="btn btn-danger fs-4" style="width: 150px;">Export BE</button>
         </div>
       </div>
 
@@ -102,6 +103,7 @@
     const signBut = document.getElementById('sign-pdf')
     const submitBut = document.getElementById('submit-sign')
     const exportBut = document.getElementById('export-pdf')
+    const exportButBE = document.getElementById('export-pdf-backend')
 
     let savedStroke = []
     // 在簽名版設置監聽器
@@ -221,13 +223,18 @@
       }
     })
 
-    // 匯出 PDF
+    // 匯出 PDF (當前畫面)
     exportBut.addEventListener('click', () => {
       if (signatureZone.firstChild) {
         exportToPDF(url, pageNumber, scale)
       } else {
         console.log('You have to finish sign!')
       }
+    })
+
+    // 匯出完整 PDF (後端)
+    exportButBE.addEventListener('click', () => {
+      exportToPDFFinal(url, pageNumber, scale, signRectList, signImageDataUrlList)
     })
 
     // 右半 pdf 區, 引入 pdf.worker.js
@@ -280,7 +287,7 @@
       }
     }
 
-    const name = 'tom'
+    const name = 'goodjobhot'
     const signRectInfo = [{
       "serialNum": 1,
       "name": "tom",
@@ -317,6 +324,14 @@
       "top": 549.6378980138094,
       "width": 189.4693890739587,
       "height": 94.73469453697935
+    }]
+
+    const signImageDataUrl = [{
+      "name": "tom",
+      "dataUrl": "data:image/png;base64,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"
+    }, {
+      "name": "goodjobhot",
+      "dataUrl": "data:image/png;base64,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 + PWTsJTBCgYE3AC8raejdhr4q8bHyPHlUPFb +/AgEK1nGsCOGCx/WGEkjHozWIYSG2hdgXPvg3fkjgVgQoWMc2N1/ffmz7sHUbE6BgbQyc1ZEACYwToGCNs2NOEiCBjQlQsDYGzupIgATGCVCwxtkxJwmQwMYEKFgbA2d1JEAC4wQoWOPsmJMESGBjAhSsjYGzOhIggXECFKxxdsxJAiSwMQEK1sbAWR0JkMA4AQrWODvmJAES2JgABWtj4KyOBEhgnAAFa5wdc5IACWxMgIK1MXBWRwIkME6AgjXOjjlJgAQ2JkDB2hg4qyMBEhgnQMEaZ8ecJEACGxP4Pw6o/sQfDB0YAAAAAElFTkSuQmCC"
     }]
 
     // 依照 PDF 的長寬創建 fabric 舞台, 並依照 name 繪製簽名框
@@ -360,7 +375,7 @@
     }
 
 
-    // 匯出 PDF 檔
+    // 匯出 PDF 檔 (client)
     async function exportToPDF(url, pageNumber, scale) {
       try {
         const { width, height } = await getPDFViewport(url, pageNumber, scale)
@@ -390,6 +405,7 @@
                 resolve()
               }
               const signDataUrl = canvasElement.toDataURL('image/jpeg')
+              console.log(signDataUrl)
               img.src = signDataUrl
             })
           }
@@ -404,6 +420,116 @@
           }
         }
         await loadCanvasImages()
+      } catch (error) {
+        console.log('An error occurred', error)
+      }
+    }
+
+    let signRectList = signRectInfo
+    let signImageDataUrlList = signImageDataUrl
+
+    // 匯出 PDF 檔 (server)
+    async function exportToPDFFinal(url, pageNumber, scale, signRectList, signImageDataUrlList) {
+      try {
+        // 創造 fabric 舞台和簽名框
+        const { width, height } = await getPDFViewport(url, pageNumber, scale)
+        const fabricCanvasContainer = document.getElementById('fabric-canvas-container')
+        fabricCanvasContainer.style.width = `${width}px`
+        fabricCanvasContainer.style.height = `${height}px`
+        fabricCanvas = new fabric.Canvas('fabric-canvas', {
+          width: width,
+          height: height
+        })
+
+        let signRectsList = []
+        for (const item of signRectList) {
+          const rect = document.createElement('canvas')
+          const signRect = new fabric.Rect(rect)
+
+          signRect.set({
+            name: item.name,
+            left: item.left,
+            top: item.top,
+            width: item.width,
+            height: item.height,
+            fill: item.color,
+            opacity: 0.35,
+            lockMovementX: true,
+            lockMovementY: true,
+            selectable: false,
+          })
+          signRectsList.push(signRect)
+          fabricCanvas.add(signRect)
+        }
+
+
+        const pdfCanvas = document.getElementById('canvas-pdf-container')
+        // 每一個 signRect 都填滿對應的 dataUrl, 並移除自己的 signRectsList 的紀錄
+        signRectsList.forEach(function (item) {
+          const filteredSignImageDataUrl = signImageDataUrlList.filter(signRect => signRect.name === item.name)
+          const signImageCanvas = document.createElement('canvas')
+          signImageCanvas.width = item.width
+          signImageCanvas.height = item.height
+          signImageCanvas.style.position = 'absolute'
+          signImageCanvas.style.top = `${item.top}px`
+          signImageCanvas.style.left = `${item.left}px`
+          signImageCanvas.classList = 'sign-image-canvas'
+
+          const context = signImageCanvas.getContext('2d')
+          const newImage = new Image()
+          console.log(filteredSignImageDataUrl)
+          newImage.src = filteredSignImageDataUrl[0].dataUrl
+
+          newImage.onload = () => {
+            context.drawImage(newImage, 0, 0, item.width, item.height)
+          }
+          pdfCanvas.appendChild(signImageCanvas)
+        })
+        const newSignRects = signRectsList
+        newSignRects.forEach(function (signRect) {
+          fabricCanvas.remove(signRect)
+        })
+        fabricCanvas.renderAll()
+
+        // 創建合併所有 canvas 元素的 canvas
+        const mergedCanvas = document.createElement('canvas')
+        mergedCanvas.width = width
+        mergedCanvas.height = height
+        const mergedContext = mergedCanvas.getContext('2d')
+
+        const canvasPDF = document.getElementById('canvas-pdf')
+        const otherCanvasElements = document.querySelectorAll('.sign-image-canvas')
+
+        // 合併所有 canvas 並輸出成 PDF
+        const loadCanvasImages = async () => {
+          mergedContext.drawImage(canvasPDF, 0, 0)
+
+          for (const canvasElement of otherCanvasElements) {
+            const parentElementRect = canvasElement.parentElement.getBoundingClientRect()
+            const canvasRect = canvasElement.getBoundingClientRect()
+            const left = canvasRect.left - parentElementRect.left
+            const top = canvasRect.top - parentElementRect.top
+
+            await new Promise((resolve) => {
+              const img = new Image()
+              img.onload = () => {
+                mergedContext.drawImage(canvasElement, left, top)
+                resolve()
+              }
+              const signDataUrl = canvasElement.toDataURL('image/jpeg')
+              img.src = signDataUrl
+            })
+          }
+          const newPDF = new jsPDF('portrait', 'px', [width, height])
+          const dataUrl = mergedCanvas.toDataURL('image/jpeg')
+
+          if (dataUrl) {
+            newPDF.addImage(dataUrl, 'JPEG', 0, 0, width, height)
+            newPDF.save('testPDF')
+          }
+        }
+        await loadCanvasImages()
+
       } catch (error) {
         console.log('An error occurred', error)
       }
