@@ -27,15 +27,7 @@
       <!-- 左半邊 -->
       <div id="left-side" class="col col-4 border pt-5 pb-5" style="height: 100vh; background-color: #333333c4">
 
-        <div class="mt-5">
-          <h1 class="text-center text-light">建立簽名框</h1>
-          <div class="mt-4 mb-4 d-flex justify-content-evenly">
-            <button id="create-rect" class="btn btn-primary fs-4" style="width: 30%; height: 50px;">Create</button>
-            <button id="rect-lock" class="btn btn-warning fs-4" style="width: 30%; height: 50px;">Lock</button>
-            <button id="submit" class="btn btn-success fs-4" style="width: 30%; height: 50px;" disabled>Submit</button>
-          </div>
-        </div>
-
+        <div class="only-for-layout" style="height: 10%; z-index: -1;"></div>
 
         <h1 class="mt-5 text-center text-light">創建簽名</h1>
         <canvas id="canvas-sign" class="mt-3 border" style="width: 100%; background-color: #f0f0f0"></canvas>
@@ -50,7 +42,6 @@
         <div id="signature-img-zone" class="border" style="height: 200px; width: 100%; background-color: #f0f0f0"></div>
         <div class=" mt-3 mb-5 d-flex flex-row justify-content-evenly" style="width: 100%;">
           <button id="clean-img" class="btn btn-primary fs-4" style="width: 100px;">Clean</button>
-          <!-- <button id="create-sign" class="btn btn-warning fs-4" style="width: 100px;">Create</button> -->
           <button id="sign-pdf" class="btn btn-warning fs-4" style="width: 100px;">Sign</button>
           <button id="export-pdf" class="btn btn-success fs-4" style="width: 100px;">Export</button>
         </div>
@@ -93,17 +84,14 @@
     let fabricCanvas;
     let signRect;
     let signRects = []
-    let signRectInfo = []
-    let serialNum = 1
-    let isDraggingEnabled = true
-    let signImageCanvasList = []
+    // let signRectInfo = []
+    // let serialNum = 1
+    // let isDraggingEnabled = true
+    // let signImageCanvasList = []
 
     // 左半簽名區
     const canvas = document.getElementById("canvas-sign")
     const signaturePad = new SignaturePad(canvas)
-    const createRectBut = document.getElementById('create-rect')
-    const lockBut = document.getElementById('rect-lock')
-    const submitBut = document.getElementById('submit')
     const cleanBut = document.getElementById('clean')
     const undoBut = document.getElementById('undo')
     const saveBut = document.getElementById('save')
@@ -112,90 +100,16 @@
     const signBut = document.getElementById('sign-pdf')
     const exportBut = document.getElementById('export-pdf')
 
-    // 創建指定簽名框
-    createRectBut.addEventListener('click', () => {
-      const rect = document.createElement('canvas')
-      const signRect = new fabric.Rect(rect)
-      signRect.serialNum = serialNum
-      serialNum++
-
-      signRect.set({
-        left: 100,
-        top: 500,
-        width: signatureZone.clientWidth * 0.5,
-        height: signatureZone.clientHeight * 0.5,
-        opacity: 0.35,
-        fill: 'blue',
-        lockMovementX: !isDraggingEnabled,
-        lockMovementY: !isDraggingEnabled
-      })
-
-      signRects.push(signRect)
-      fabricCanvas.add(signRect)
-
-      signRect.on('mousedblclick', function () {
-        const deletedSignRect = signRects.find((rect) => rect.serialNum === signRect.serialNum)
-        const index = signRects.indexOf(deletedSignRect)
-        if (index > -1) {
-          signRects.splice(index, 1)
-        }
-        fabricCanvas.remove(signRect)
-        fabricCanvas.discardActiveObject()
-        fabricCanvas.renderAll()
-      })
-      fabricCanvas.renderAll()
-    })
-
-    // 鎖定簽名框(不能新增簽名框, 不能拖移)
-    lockBut.addEventListener('click', () => {
-      isDraggingEnabled = !isDraggingEnabled
-
-      signRects.forEach(function (signRect) {
-        signRect.lockMovementX = !isDraggingEnabled
-        signRect.lockMovementY = !isDraggingEnabled
-      })
-
-      if (isDraggingEnabled === false) {
-        lockBut.innerText = 'Unlock'
-        lockBut.classList.remove('btn-warning')
-        lockBut.classList.add('btn-danger')
-        submitBut.removeAttribute("disabled")
-        createRectBut.setAttribute("disabled", "true")
-        signRectInfo = []
-      } else {
-        lockBut.innerText = 'Lock'
-        lockBut.classList.remove('btn-danger')
-        lockBut.classList.add('btn-warning')
-        submitBut.setAttribute("disabled", "true")
-        createRectBut.removeAttribute("disabled")
-      }
-      fabricCanvas.renderAll()
-    })
-
-    // 記錄簽名框的座標, 長寬資料
-    submitBut.addEventListener('click', () => {
-      signRects.forEach(function (signRect) {
-        const scaleX = signRect.scaleX
-        const scaleY = signRect.scaleY
-
-        const originalWidth = signRect.width
-        const originalHeight = signRect.height
-
-        const scaledWidth = originalWidth * scaleX
-        const scaledHeight = originalHeight * scaleY
-
-        const rectInfo = {
-          serialNum: signRect.serialNum,
-          left: signRect.left,
-          top: signRect.top,
-          width: scaledWidth,
-          height: scaledHeight
-        }
-        signRectInfo.push(rectInfo)
-      })
-      console.log(signRectInfo)
-    })
-
+    // const rectInfo = {
+    //   serialNum: signRect.serialNum,
+    //   name: signRect.name,
+    //   color: signRect.color,
+    //   priority: signRect.priority,
+    //   left: signRect.left,
+    //   top: signRect.top,
+    //   width: scaledWidth,
+    //   height: scaledHeight
+    // }
 
     let savedStroke = []
     // 在簽名版設置監聽器
@@ -272,7 +186,7 @@
             context.drawImage(newImage, 0, 0, signRect.width, signRect.height)
           }
 
-          signImageCanvasList.push(signImageCanvas)
+          // signImageCanvasList.push(signImageCanvas)
           pdfCanvas.appendChild(signImageCanvas)
 
           const newSignRects = signRects
@@ -360,8 +274,46 @@
       }
     }
 
-    // 依照 PDF 的長寬創建 fabric 舞台
-    async function createFabricCanvas(url, pageNumber, scale) {
+    const signRectInfo = [{
+      "serialNum": 1,
+      "name": "tom",
+      "color": "blue",
+      "priority": "1",
+      "left": 15.041669584704863,
+      "top": 16.33534593685045,
+      "width": 162.93571037473288,
+      "height": 81.46785518736644
+    }, {
+      "serialNum": 2,
+      "name": "tom",
+      "color": "blue",
+      "priority": "1",
+      "left": 548.124917443159,
+      "top": 530.257754661389,
+      "width": 239.8852556396248,
+      "height": 119.9426278198124
+    }, {
+      "serialNum": 3,
+      "name": "goodjobhot",
+      "color": "red",
+      "priority": "2",
+      "left": 447.2682142830165,
+      "top": 994.657032564585,
+      "width": 340.4068866962454,
+      "height": 170.2034433481227
+    }, {
+      "serialNum": 4,
+      "name": "goodjobhot",
+      "color": "red",
+      "priority": "2",
+      "left": 257.8760054666051,
+      "top": 549.6378980138094,
+      "width": 189.4693890739587,
+      "height": 94.73469453697935
+    }]
+
+    // 依照 PDF 的長寬創建 fabric 舞台, 並繪製簽名框
+    async function createFabricCanvas(url, pageNumber, scale, signRectInfo) {
       try {
         // 獲取 viewport 的長寬
         const { width, height } = await getPDFViewport(url, pageNumber, scale)
@@ -376,6 +328,26 @@
           width: width,
           height: height
         })
+
+        for (const item of signRectInfo) {
+          const rect = document.createElement('canvas')
+          const signRect = new fabric.Rect(rect)
+
+          signRect.set({
+            left: item.left,
+            top: item.top,
+            width: item.width,
+            height: item.height,
+            fill: item.color,
+            opacity: 0.35,
+            lockMovementX: true,
+            lockMovementY: true,
+            selectable: false,
+          })
+          signRects.push(signRect)
+          fabricCanvas.add(signRect)
+        }
+
         return fabricCanvas
       } catch (error) {
         console.log('An error occurred:', error)
@@ -434,7 +406,7 @@
     }
 
     renderPDF(url, pageNumber, scale)
-    createFabricCanvas(url, pageNumber, scale)
+    createFabricCanvas(url, pageNumber, scale, signRectInfo)
 
   </script>
 
